@@ -30,6 +30,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
+      # 新增：让 Mac 和 Linux 服务器下载模型
+      - name: Download AI Models (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          chmod +x setup_models.sh
+          ./setup_models.sh
+
+      # 新增：让 Windows 服务器用 PowerShell 下载模型
+      - name: Download AI Models (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -Path "src-tauri\resources" -ItemType Directory -Force
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -OutFile "src-tauri\resources\model.onnx"
+          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -OutFile "src-tauri\resources\tokenizer.json"
+
       - name: install frontend dependencies
         run: npm install
 
