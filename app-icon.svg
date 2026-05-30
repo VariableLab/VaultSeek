@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vsr-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 外层 Vault 六边形 -->
+  <path d="M256 40L446.5 148V364L256 472L65.5 364V148L256 40Z" fill="url(#vsr-gradient)" fill-opacity="0.1" stroke="url(#vsr-gradient)" stroke-width="20" stroke-linejoin="round" />
+
+  <!-- 核心 VSR 组合标志 -->
+  <g filter="url(#glow)">
+    <!-- V 的部分 -->
+    <path d="M160 180L256 380L352 180" stroke="white" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- R 的闭环和勾 -->
+    <path d="M352 180C352 180 410 180 410 240C410 300 352 300 352 300L410 380" stroke="white" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- S 的穿梭路径 (在 V 中间) -->
+    <path d="M210 240C210 240 256 210 300 240C344 270 256 320 256 320" stroke="#3B82F6" stroke-width="25" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- 装饰性 AI 节点 -->
+  <circle cx="256" cy="40" r="12" fill="white" />
+  <circle cx="446.5" cy="148" r="8" fill="white" fill-opacity="0.6" />
+  <circle cx="65.5" cy="148" r="8" fill="white" fill-opacity="0.6" />
+</svg>

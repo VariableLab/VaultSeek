@@ -1,0 +1,41 @@
+[package]
+name = "vaultseek"
+version = "0.1.0"
+description = "Local AI-powered semantic search engine"
+authors = ["liuxuran"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-rc", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = ["macos-private-api"] }
+tauri-plugin-shell = "2.0.0-rc"
+tauri-plugin-dialog = "2.0.0-rc"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+notify = "6.1.1"
+walkdir = "2.5"
+rusqlite = { version = "0.31", features = ["bundled"] }
+ignore = "0.4"
+pathdiff = "0.2"
+uuid = { version = "1.8", features = ["v4", "serde"] }
+ort = "2.0.0-rc.9"
+ndarray = "0.17"
+tokenizers = "0.19"
+rayon = "1.10" # 并行处理，大幅提升 800+ 文件的扫描速度
+base64 = "0.22"
+pdf-extract = "0.7"
+bincode = "1.3"
+zip = "2.1"
+quick-xml = "0.36"
+
+[profile.release]
+panic = "abort" # 减少二进制体积
+codegen-units = 1
+lto = true
+opt-level = "s" # 优化体积
+strip = true

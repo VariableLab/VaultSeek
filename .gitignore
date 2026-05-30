@@ -1,0 +1,30 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Rust artifacts
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Tauri specific
+src-tauri/gen/
+
+# Large Binary AI Models (User should download via setup script)
+src-tauri/resources/*.onnx
+src-tauri/resources/*.json
+
+# Local Search Cache (Sensitive Data!)
+*.db
+*.db-shm
+*.db-wal
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+dist-isolation/
