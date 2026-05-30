@@ -7,6 +7,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write  # 核心修复：允许脚本创建 Release
     strategy:
       fail-fast: false
       matrix:
@@ -30,14 +32,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
-      # 新增：让 Mac 和 Linux 服务器下载模型
       - name: Download AI Models (Unix)
         if: matrix.platform != 'windows-latest'
         run: |
           chmod +x setup_models.sh
           ./setup_models.sh
 
-      # 新增：让 Windows 服务器用 PowerShell 下载模型
       - name: Download AI Models (Windows)
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -54,13 +54,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: VaultSeek-${{ github.ref_name }}
+          tagName: ${{ github.ref_name }}  # 直接使用 v1.0.6 这种格式
           releaseName: "VaultSeek RAG ${{ github.ref_name }}"
           releaseBody: |
             ## VaultSeek RAG 1.0 Release
-            Enjoy local AI semantic search!
-            - **Privacy First**: Your data never leaves your machine.
-            - **Hybrid Search**: Semantic + Keyword matching.
-            - **Multi-format**: Markdown, PDF, TXT, DOCX.
+            The first stable release for Mac & Windows!
+            - **Privacy First**: 100% Local AI.
+            - **Semantic Search**: Powered by ONNX.
+            - **Formats**: MD, PDF, TXT, DOCX.
           releaseDraft: false
           prerelease: false
