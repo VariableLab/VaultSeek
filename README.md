@@ -48,8 +48,8 @@ cd VaultSeek
 
 2. Download the required AI model (BGE-Small-zh):
 ```bash
-chmod +x setup_models.sh
-./setup_models.sh
+chmod +x docs/setup_models.sh
+./docs/setup_models.sh
 ```
 
 3. Install dependencies and run:
