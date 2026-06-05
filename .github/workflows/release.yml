@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     permissions:
-      contents: write  # 核心修复：允许脚本创建 Release
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -26,17 +26,12 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-
       - name: Download AI Models (Unix)
-        if: matrix.platform != 'windows-latest'
+        if: matrix.platform == 'macos-latest'
         run: |
-          chmod +x setup_models.sh
-          ./setup_models.sh
+          mkdir -p src-tauri/resources
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -o src-tauri/resources/model.onnx
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -o src-tauri/resources/tokenizer.json
 
       - name: Download AI Models (Windows)
         if: matrix.platform == 'windows-latest'
@@ -54,13 +49,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}  # 直接使用 v1.0.6 这种格式
-          releaseName: "VaultSeek RAG ${{ github.ref_name }}"
+          tagName: ${{ github.ref_name }}
+          releaseName: "VaultSeek v${{ github.ref_name }}"
           releaseBody: |
-            ## VaultSeek RAG 1.0 Release
-            The first stable release for Mac & Windows!
-            - **Privacy First**: 100% Local AI.
-            - **Semantic Search**: Powered by ONNX.
-            - **Formats**: MD, PDF, TXT, DOCX.
+            ## VaultSeek v1.2.0 Release
+            
+            ### 🚀 New Features
+            - **Spotlight Mode**: Toggle window instantly with `Alt + S`.
+            - **Dual-Pane Layout**: Immersive reading experience with high-quality typography.
+            - **Live Folder Sync**: Real-time indexing for your local files.
+            - **Multi-context Highlighting**: Highlight search results in both list and content view.
+            - **Hybrid Search**: Combining keyword weight and semantic similarity for 100% precision.
+            
+            ### 🛠 Improvements
+            - High-performance Rust backend powered by ONNX Runtime.
+            - 100% Local and Private - Your data never leaves your computer.
+            - Improved PDF and DOCX parsing reliability.
           releaseDraft: false
           prerelease: false

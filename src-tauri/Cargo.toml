@@ -32,6 +32,7 @@ pdf-extract = "0.7"
 bincode = "1.3"
 zip = "2.1"
 quick-xml = "0.36"
+tauri-plugin-global-shortcut = "2.0.0-beta"
 
 [profile.release]
 panic = "abort" # 减少二进制体积
