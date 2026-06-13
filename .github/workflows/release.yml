@@ -1,20 +1,18 @@
-name: "Release"
-
+name: Release
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, windows-latest]
-
     runs-on: ${{ matrix.platform }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,44 +24,21 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Download AI Models (Unix)
+      - name: install dependencies (macOS)
         if: matrix.platform == 'macos-latest'
-        run: |
-          mkdir -p src-tauri/resources
-          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -o src-tauri/resources/model.onnx
-          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -o src-tauri/resources/tokenizer.json
-
-      - name: Download AI Models (Windows)
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          New-Item -Path "src-tauri\resources" -ItemType Directory -Force
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -OutFile "src-tauri\resources\model.onnx"
-          Invoke-WebRequest -Uri "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -OutFile "src-tauri\resources\tokenizer.json"
-
-      - name: install frontend dependencies
         run: npm install
 
-      - name: Build and Package
+      - name: install dependencies (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: npm install
+
+      - name: build tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "VaultSeek v${{ github.ref_name }}"
-          releaseBody: |
-            ## VaultSeek v1.2.0 Release
-            
-            ### 🚀 New Features
-            - **Spotlight Mode**: Toggle window instantly with `Alt + S`.
-            - **Dual-Pane Layout**: Immersive reading experience with high-quality typography.
-            - **Live Folder Sync**: Real-time indexing for your local files.
-            - **Multi-context Highlighting**: Highlight search results in both list and content view.
-            - **Hybrid Search**: Combining keyword weight and semantic similarity for 100% precision.
-            
-            ### 🛠 Improvements
-            - High-performance Rust backend powered by ONNX Runtime.
-            - 100% Local and Private - Your data never leaves your computer.
-            - Improved PDF and DOCX parsing reliability.
-          releaseDraft: false
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          releaseName: "VaultSeek v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
           prerelease: false

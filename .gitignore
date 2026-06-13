@@ -28,3 +28,11 @@ Thumbs.db
 # Build output
 dist/
 dist-isolation/
+
+# Sandboxes & AI Agent tools
+.sandbox-home/
+.sandbox-tmp/
+.claw/
+.claude/
+.clawd-todos.json
+

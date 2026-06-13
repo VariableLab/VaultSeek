@@ -4,12 +4,13 @@
 
 :root {
   --font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --font-serif: "Charter", "Georgia", "Source Han Serif SC", "Noto Serif CJK SC", serif;
+  --font-ai: "Inter", "system-ui", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
 }
 
 @layer base {
   body {
-    @apply antialiased text-gray-900 bg-transparent overflow-hidden;
+    @apply antialiased text-gray-300 bg-[#0c0c0e] overflow-hidden;
     font-family: var(--font-sans);
     letter-spacing: -0.01em;
   }
@@ -17,13 +18,62 @@
   #root {
     height: 100vh;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight;
-  }
 }
 
-/* 滚动条美化 */
+/* AI 结论样式：侧重阅读体验 */
+.prose-ai {
+  font-family: var(--font-ai);
+  font-size: 16px;
+  line-height: 1.85;
+  color: #f4f4f5;
+  letter-spacing: 0.01em;
+}
+
+.prose-ai p {
+  margin-bottom: 1.5em;
+}
+
+.prose-ai h2 {
+  @apply text-xl font-bold text-white mb-4 mt-8 flex items-center gap-2;
+}
+
+.prose-ai h2::before {
+  content: "";
+  @apply w-1 h-5 bg-blue-600 rounded-full;
+}
+
+.prose-ai mark {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.4);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* 原始片段样式：侧重档案感 */
+.prose-source {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: #a1a1aa;
+}
+
+/* 档案卡片特有效果 */
+.archive-card {
+  @apply relative overflow-hidden transition-all duration-300;
+  background: linear-gradient(145deg, rgba(24, 24, 27, 0.4), rgba(24, 24, 27, 0.8));
+}
+
+.archive-card::before {
+  content: "";
+  @apply absolute top-0 left-0 w-[2px] h-full bg-neutral-800 transition-all duration-300;
+}
+
+.archive-card:hover::before {
+  @apply bg-blue-600;
+}
+
+/* 滚动条 */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -34,30 +84,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-200 rounded-full transition-colors;
+  @apply bg-neutral-800 rounded-full hover:bg-neutral-700;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-300;
-}
-
-/* 动画效果 */
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-/* 搜索关键词高亮 */
-.highlight-text {
-  @apply bg-yellow-200 text-yellow-900 rounded-sm px-0.5 font-bold;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-/* 文本选择颜色 */
-::selection {
-  @apply bg-blue-100 text-blue-900;
+/* 玻璃拟态输入框 */
+.glass-input {
+  background: rgba(18, 18, 20, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
 }
