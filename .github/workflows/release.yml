@@ -32,6 +32,20 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: npm install
 
+      - name: Download AI Models (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          mkdir -p src-tauri/resources
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -o src-tauri/resources/model.onnx
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -o src-tauri/resources/tokenizer.json
+
+      - name: Download AI Models (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          mkdir src-tauri\resources
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/onnx/model.onnx" -o src-tauri\resources\model.onnx
+          curl -L "https://huggingface.co/Xenova/bge-small-zh-v1.5/resolve/main/tokenizer.json" -o src-tauri\resources\tokenizer.json
+
       - name: build tauri app
         uses: tauri-apps/tauri-action@v0
         env:
