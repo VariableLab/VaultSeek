@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use reqwest_eventsource::{Event, EventSource};
 use futures_util::stream::StreamExt;
 use tauri::{AppHandle, Emitter};
+use crate::state::DEFAULT_API_URL;
 
 #[derive(Serialize)]
 struct ChatMessage {
@@ -35,7 +36,7 @@ pub async fn expand_query(api_key: String, model: String, api_url: String, query
     let client = reqwest::Client::new();
     // 优先使用传入的 api_url，如果没有则尝试从环境变量读取
     let final_url = if api_url.is_empty() {
-        std::env::var("VAULTSEEK_API_URL").unwrap_or_else(|_| "https://deepstock.zone.id/v1/chat/completions".to_string())
+        std::env::var("VAULTSEEK_API_URL").unwrap_or_else(|_| DEFAULT_API_URL.to_string())
     } else {
         api_url
     };
@@ -83,7 +84,7 @@ pub async fn stream_chat(
     
     // 智能处理 URL：确保指向正确的 API 路径
     let final_url = if api_url.is_empty() {
-        "https://api.openai.com/v1/chat/completions".to_string()
+        DEFAULT_API_URL.to_string()
     } else if !api_url.contains("/chat/completions") {
         let base = api_url.trim_end_matches('/');
         if base.ends_with("/v1") {

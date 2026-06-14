@@ -1,6 +1,6 @@
 [package]
 name = "vaultseek"
-version = "0.1.0"
+version = "1.2.0"
 description = "Local AI-powered semantic search engine"
 authors = ["liuxuran"]
 edition = "2021"
@@ -15,32 +15,25 @@ tauri-plugin-dialog = "2.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
-tracing = "0.1"
-tracing-subscriber = "0.3"
 notify = "6.1.1"
 walkdir = "2.5"
 rusqlite = { version = "0.31", features = ["bundled"] }
-ignore = "0.4"
-pathdiff = "0.2"
 uuid = { version = "1.8", features = ["v4", "serde"] }
 ort = "2.0.0-rc.9"
 ndarray = "0.17"
 tokenizers = "0.19"
 rayon = "1.10" # 并行处理，大幅提升 800+ 文件的扫描速度
-base64 = "0.22"
 pdf-extract = "0.7"
 bincode = "1.3"
 zip = "2.1"
-quick-xml = "0.36"
 tauri-plugin-global-shortcut = "2.0.0-beta"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 reqwest-eventsource = "0.6"
 futures-util = "0.3"
 calamine = "0.35.0"
-docx-rs = "0.4.20"
 keyring = "3.0.0"
 axum = "0.7"
-tower = "0.4"
+parking_lot = "0.12.5"
 
 [dev-dependencies]
 tempfile = "3.17"

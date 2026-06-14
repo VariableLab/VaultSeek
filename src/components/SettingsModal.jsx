@@ -4,12 +4,17 @@ import { i18n } from '../i18n';
 
 export default function SettingsModal({ isOpen, onClose, lang, setLang }) {
   const [apiKey, setApiKey] = useState('');
+  const [apiKeyPlaceholder, setApiKeyPlaceholder] = useState('未设置');
   const [apiUrl, setApiUrl] = useState('https://deepstock.zone.id/v1/chat/completions');
   const [model, setModel] = useState('moonshotai/kimi-k2.6');
 
   useEffect(() => {
     if (isOpen) {
-      invoke('get_api_key').then(setApiKey).catch(() => setApiKey(''));
+      // P0 修复: 不再获取明文 Key，只获取配置状态
+      invoke('check_api_key_status').then(isSet => {
+         setApiKeyPlaceholder(isSet ? '•••••••••••••••• (已安全存储)' : '未设置');
+      }).catch(() => setApiKeyPlaceholder('未设置'));
+      
       invoke('get_setting', { key: 'api_url' }).then(setApiUrl).catch(() => {});
       invoke('get_setting', { key: 'model' }).then(setModel).catch(() => {});
     }
@@ -40,7 +45,14 @@ export default function SettingsModal({ isOpen, onClose, lang, setLang }) {
         <div className="space-y-4">
           <div>
             <label className="text-xs text-neutral-400">{t.apiKey}</label>
-            <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full bg-[#2d2d2d] border border-neutral-700 rounded-lg p-2 text-sm text-white" />
+            <input 
+              type="password" 
+              placeholder={apiKeyPlaceholder}
+              value={apiKey} 
+              onChange={(e) => setApiKey(e.target.value)} 
+              className="w-full bg-[#2d2d2d] border border-neutral-700 rounded-lg p-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500" 
+            />
+            <div className="text-[9px] text-neutral-500 mt-1">留空表示不修改。密钥将加密存储在您的系统钥匙串中。</div>
           </div>
           <div>
             <label className="text-xs text-neutral-400">API URL</label>

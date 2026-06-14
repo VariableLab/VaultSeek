@@ -1,13 +1,14 @@
 use axum::{
     extract::{State},
     http::StatusCode,
-    response::{Json, IntoResponse, Response},
+    response::{Json, IntoResponse},
     routing::{get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use crate::AppState;
+use crate::state::{AppState, ChunkItem};
+use crate::db::core_search;
 use crate::embedding::EmbeddingEngine;
 
 #[derive(Deserialize)]
@@ -19,7 +20,7 @@ pub struct SearchQuery {
 
 #[derive(Serialize)]
 pub struct SearchResponse {
-    pub results: Vec<crate::ChunkItem>,
+    pub results: Vec<ChunkItem>,
     pub total: usize,
     pub query: String,
 }
@@ -32,7 +33,7 @@ pub struct ChatQuery {
 
 #[derive(Serialize)]
 pub struct ChatResponse {
-    pub sources: Vec<crate::ChunkItem>,
+    pub sources: Vec<ChunkItem>,
     pub context: String,
 }
 
@@ -99,64 +100,16 @@ async fn search_handler(
     let expanded_query = query.expanded_q.unwrap_or_default();
     let limit = query.limit.unwrap_or(20).min(100);
     
-    let conn = match rusqlite::Connection::open(&state.db_path) {
+    let conn = match state.app_state.db_conn.lock() {
         Ok(conn) => conn,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Database error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Database lock error: {}", e) }))).into_response(),
     };
 
-    let query_vector = match state.engine.embed(&query.q) {
-        Ok(v) => v,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Embedding error: {}", e) }))).into_response(),
+    let mut results = match core_search(&conn, &state.engine, &state.app_state.vector_index, &query.q, &expanded_query, usize::MAX, Some(0.4)) {
+        Ok(res) => res,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Search error: {}", e) }))).into_response(),
     };
 
-    let keywords: Vec<String> = format!("{}, {}", query.q, expanded_query)
-        .split(',')
-        .map(|s| s.trim().to_lowercase())
-        .filter(|s| !s.is_empty())
-        .collect();
-
-    let mut stmt = match conn.prepare("SELECT c.content, f.path, f.name, c.embedding FROM chunks c JOIN files f ON c.file_path = f.path") {
-        Ok(stmt) => stmt,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Prepare error: {}", e) }))).into_response(),
-    };
-
-    let rows = match stmt.query_map([], |row| {
-        let content: String = row.get(0)?;
-        let path: String = row.get(1)?;
-        let name: String = row.get(2)?;
-        let embedding_blob: Vec<u8> = row.get(3)?;
-        Ok((content, path, name, embedding_blob))
-    }) {
-        Ok(rows) => rows,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Query error: {}", e) }))).into_response(),
-    };
-
-    let collected_rows: Vec<_> = rows.filter_map(|r| r.ok()).collect();
-
-    use rayon::prelude::*;
-    let mut results: Vec<crate::ChunkItem> = collected_rows.into_par_iter().filter_map(|(content, path, name, embedding_blob)| {
-        let embedding: Vec<f32> = bincode::deserialize(&embedding_blob).unwrap_or_default();
-        if embedding.is_empty() { return None; }
-        
-        let semantic_score: f32 = query_vector.iter().zip(embedding.iter()).map(|(x, y)| x * y).sum();
-        
-        let content_lower = content.to_lowercase();
-        let name_lower = name.to_lowercase();
-        let keyword_hits = keywords.iter().filter(|k| content_lower.contains(*k) || name_lower.contains(*k)).count();
-        
-        let final_score = semantic_score + (keyword_hits as f32 * 0.2); 
-        
-        if final_score < 0.4 { return None; }
-        Some(crate::ChunkItem { 
-            id: uuid::Uuid::new_v4().to_string(), 
-            file_path: path, 
-            file_name: name, 
-            content, 
-            score: final_score 
-        })
-    }).collect();
-
-    results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
     let total = results.len();
     results.truncate(limit);
     
@@ -178,9 +131,9 @@ async fn chat_handler(
     let selected_ids = query.selected_ids.unwrap_or_default();
     let mut results = Vec::new();
     
-    let conn = match rusqlite::Connection::open(&state.db_path) {
+    let conn = match state.app_state.db_conn.lock() {
         Ok(conn) => conn,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Database error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Database lock error: {}", e) }))).into_response(),
     };
 
     let query_vector = match state.engine.embed(&query.query) {
@@ -216,50 +169,17 @@ async fn chat_handler(
             if let Ok((content, path, name, embedding_blob, id)) = row {
                 let embedding: Vec<f32> = bincode::deserialize(&embedding_blob).unwrap_or_default();
                 let score: f32 = query_vector.iter().zip(embedding.iter()).map(|(x, y)| x * y).sum();
-                filtered_results.push(crate::ChunkItem { id, file_path: path, file_name: name, content, score });
+                filtered_results.push(ChunkItem { id, file_path: path, file_name: name, content, score });
             }
         }
-        filtered_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        filtered_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
         results = filtered_results;
     } else {
         // Fallback to full search
-        let mut stmt = match conn.prepare("SELECT c.content, f.path, f.name, c.embedding FROM chunks c JOIN files f ON c.file_path = f.path") {
-            Ok(stmt) => stmt,
-            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Prepare error: {}", e) }))).into_response(),
+        let full_results = match core_search(&conn, &state.engine, &state.app_state.vector_index, &query.query, "", usize::MAX, Some(0.4)) {
+            Ok(res) => res,
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Search error: {}", e) }))).into_response(),
         };
-
-        let rows = match stmt.query_map([], |row| {
-            let content: String = row.get(0)?;
-            let path: String = row.get(1)?;
-            let name: String = row.get(2)?;
-            let embedding_blob: Vec<u8> = row.get(3)?;
-            Ok((content, path, name, embedding_blob))
-        }) {
-            Ok(rows) => rows,
-            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Query error: {}", e) }))).into_response(),
-        };
-
-        let collected_rows: Vec<_> = rows.filter_map(|r| r.ok()).collect();
-
-        use rayon::prelude::*;
-        let mut full_results: Vec<crate::ChunkItem> = collected_rows.into_par_iter().filter_map(|(content, path, name, embedding_blob)| {
-            let embedding: Vec<f32> = bincode::deserialize(&embedding_blob).unwrap_or_default();
-            if embedding.is_empty() { return None; }
-            
-            let semantic_score: f32 = query_vector.iter().zip(embedding.iter()).map(|(x, y)| x * y).sum();
-            let final_score = semantic_score; 
-            
-            if final_score < 0.4 { return None; }
-            Some(crate::ChunkItem { 
-                id: uuid::Uuid::new_v4().to_string(), 
-                file_path: path, 
-                file_name: name, 
-                content, 
-                score: final_score 
-            })
-        }).collect();
-
-        full_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
         results = full_results;
     }
 

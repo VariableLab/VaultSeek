@@ -1,7 +1,15 @@
 use keyring::Entry;
+
 fn main() {
-    let entry = Entry::new("vaultseek_test", "api_key").unwrap();
-    entry.set_password("test_key").unwrap();
-    let pwd = entry.get_password().unwrap();
-    println!("Retrieved: {}", pwd);
+    let entry = Entry::new("vaultseek", "api_key").unwrap();
+    println!("Setting password...");
+    match entry.set_password("test_key") {
+        Ok(_) => println!("Success setting!"),
+        Err(e) => println!("Error setting: {:?}", e),
+    }
+    
+    match entry.get_password() {
+        Ok(pw) => println!("Read password: {}", pw),
+        Err(e) => println!("Error reading: {:?}", e),
+    }
 }

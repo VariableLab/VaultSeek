@@ -36,3 +36,8 @@ dist-isolation/
 .claude/
 .clawd-todos.json
 
+# Iteration & Internal Docs
+code_quality_audit.md
+.opencodereview/
+docs/internal/
+docs/archive/
