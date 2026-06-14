@@ -8,10 +8,11 @@ import ChatMessage from './components/ChatMessage';
 import ReferenceList from './components/ReferenceList';
 import ThinkingChain from './components/ThinkingChain';
 import { initialState, appReducer } from './store/appReducer';
+import { useTranslation } from 'react-i18next';
 
 function App() {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const [lang, setLang] = useState('zh');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isApiOk, setIsApiOk] = useState(null);
   const chatEndRef = useRef(null);
@@ -70,9 +71,9 @@ function App() {
       return;
     }
     const prompts = {
-      summary: ["请为选中的研究素材生成一份专业的研究综述，提取核心论点。", "📝 生成研究综述"],
-      qa: ["请基于选中的素材提出 3 个最深刻的洞察问题并解答。", "❓ 深度问答"],
-      table: ["请以 Markdown 表格形式提取素材中的关键数据（日期、金额、项目名等）。", "📊 数据提炼"]
+      summary: [t('prompt_summary'), t('action_summary')],
+      qa: [t('prompt_qa'), t('action_qa')],
+      table: [t('prompt_table'), t('action_table')]
     };
     handleSend(prompts[type][0], prompts[type][1]);
   };
@@ -89,32 +90,32 @@ function App() {
       </div>
 
       <div className="w-[260px] min-w-[220px] shrink-0 bg-[#0c0c0e] border-r border-neutral-900 flex flex-col pt-12">
-        <div className="px-5 mb-8 flex justify-between items-center"><div className="flex items-center gap-2.5 text-white font-bold text-sm tracking-tight"><div className="p-1 bg-blue-600 rounded"><LayoutGrid size={14} className="text-white"/></div>VaultSeek</div><button onClick={() => setIsSettingsModalOpen(true)} className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-md transition-all"><Settings size={14}/></button></div>
+        <div className="px-5 mb-8 flex justify-between items-center"><div className="flex items-center gap-2.5 text-white font-bold text-sm tracking-tight"><div className="p-1 bg-blue-600 rounded"><LayoutGrid size={14} className="text-white"/></div>{t('app_title')}</div><button onClick={() => setIsSettingsModalOpen(true)} className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-md transition-all"><Settings size={14}/></button></div>
         <div className="px-3 flex-1 flex flex-col gap-1 overflow-y-auto">
-          <button onClick={() => dispatch({ type: 'RESET_CHAT' })} className="flex items-center gap-3 px-3 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/50 rounded-xl transition-all border border-transparent hover:border-neutral-800"><MessageSquare size={16} /> 新对话</button>
+          <button onClick={() => dispatch({ type: 'RESET_CHAT' })} className="flex items-center gap-3 px-3 py-2.5 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/50 rounded-xl transition-all border border-transparent hover:border-neutral-800"><MessageSquare size={16} /> {t('new_chat')}</button>
           
           <div className="mt-4 px-3">
-             <div className="text-[10px] font-bold text-neutral-600 tracking-widest uppercase mb-2 flex items-center gap-2"><Brain size={10}/> 专家面具</div>
+             <div className="text-[10px] font-bold text-neutral-600 tracking-widest uppercase mb-2 flex items-center gap-2"><Brain size={10}/> {t('expert_persona')}</div>
              <select 
                 value={state.persona} 
                 onChange={(e) => dispatch({ type: 'SET_PERSONA', payload: e.target.value })}
                 className="w-full bg-[#1c1c1f] text-xs text-neutral-300 border border-neutral-800 rounded-lg p-2 focus:ring-0 focus:border-blue-500 transition-colors cursor-pointer outline-none"
              >
-                <option value="default">🎭 通用顾问 (Default)</option>
-                <option value="medical">🩺 医学审查专家</option>
-                <option value="legal">⚖️ 法务合规审查</option>
-                <option value="coder">💻 资深系统架构师</option>
+                <option value="default">🎭 {t('persona_normal')}</option>
+                <option value="medical">🩺 {t('persona_medical')}</option>
+                <option value="legal">⚖️ {t('persona_legal')}</option>
+                <option value="coder">💻 {t('persona_coder')}</option>
              </select>
           </div>
 
-          <div className="mt-8 px-3 text-[10px] font-bold text-neutral-600 tracking-widest uppercase flex items-center justify-between"><span>知识库状态</span><button onClick={handlePickFolder} className="hover:text-blue-500 transition-colors"><LayoutGrid size={10} /></button></div>
+          <div className="mt-8 px-3 text-[10px] font-bold text-neutral-600 tracking-widest uppercase flex items-center justify-between"><span>{t('kb_status')}</span><button onClick={handlePickFolder} className="hover:text-blue-500 transition-colors"><LayoutGrid size={10} /></button></div>
           {state.indexingStatus.watch_path ? (
             <div className="mt-2 px-3 py-3 rounded-xl bg-neutral-900/50 border border-neutral-800">
                <div className="flex items-center justify-between mb-2"><span className="text-[11px] text-neutral-400 truncate max-w-[120px]">{state.indexingStatus.watch_path.split('/').pop()}</span>{!state.indexingStatus.is_finished && <Loader2 size={10} className="animate-spin text-blue-500" />}</div>
                <div className="w-full h-1 bg-neutral-800 rounded-full overflow-hidden"><div className="h-full bg-blue-600 transition-all duration-500" style={{ width: `${state.indexingStatus.total > 0 ? (state.indexingStatus.current / state.indexingStatus.total * 100) : 100}%` }}/></div>
-               <div className="mt-2 text-[10px] text-neutral-500">{state.indexingStatus.is_finished ? '索引已同步' : `正在同步 (${state.indexingStatus.current}/${state.indexingStatus.total})`}</div>
+               <div className="mt-2 text-[10px] text-neutral-500">{state.indexingStatus.is_finished ? t('status_idle') : `${t('status_indexing')} (${state.indexingStatus.current}/${state.indexingStatus.total})`}</div>
             </div>
-          ) : <button onClick={handlePickFolder} className="mt-2 mx-1 flex items-center justify-center gap-2 py-3 border border-dashed border-neutral-800 rounded-xl text-xs text-neutral-500 hover:text-blue-400 hover:border-blue-900 transition-all"><FolderOpen size={14} /> 导入知识库</button>}
+          ) : <button onClick={handlePickFolder} className="mt-2 mx-1 flex items-center justify-center gap-2 py-3 border border-dashed border-neutral-800 rounded-xl text-xs text-neutral-500 hover:text-blue-400 hover:border-blue-900 transition-all"><FolderOpen size={14} /> {t('import_kb')}</button>}
           
           {state.selectedSourceIds.size > 0 && (
             <div className="mt-8 px-3 animate-in fade-in duration-500">
@@ -139,11 +140,11 @@ function App() {
             {state.chatHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
                 <div className="w-16 h-16 bg-blue-600/10 rounded-3xl flex items-center justify-center mb-6 border border-blue-600/20"><Sparkles size={32} className="text-blue-500" /></div>
-                <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">有什么我可以帮您的？</h1>
-                <p className="text-neutral-500 text-sm mb-10 max-w-sm">VaultSeek 已经准备好从您的本地知识库中提取智慧并进行总结。</p>
+                <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">{t('welcome_title')}</h1>
+                <p className="text-neutral-500 text-sm mb-10 max-w-sm">{t('welcome_desc')}</p>
                 <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                  <button onClick={() => handleSend("请总结当前知识库中最核心的观点，并列出关键数据。", "总结知识库核心")} className="p-4 bg-[#1c1c1f] hover:bg-[#27272a] rounded-2xl border border-neutral-800 text-left transition-all hover:scale-[1.02]"><div className="text-xs font-bold text-blue-400 mb-1">快速行动</div><div className="text-sm text-neutral-300">一键总结知识库观点</div></button>
-                  <button onClick={() => handleSend("列出最近更新的文件中提到的核心概念。", "最近核心概念")} className="p-4 bg-[#1c1c1f] hover:bg-[#27272a] rounded-2xl border border-neutral-800 text-left transition-all hover:scale-[1.02]"><div className="text-xs font-bold text-indigo-400 mb-1">动态追踪</div><div className="text-sm text-neutral-300">分析最近变更的知识</div></button>
+                  <button onClick={() => handleSend(t('prompt_summary'), t('action_summary'))} className="p-4 bg-[#1c1c1f] hover:bg-[#27272a] rounded-2xl border border-neutral-800 text-left transition-all hover:scale-[1.02]"><div className="text-xs font-bold text-blue-400 mb-1">{t('quick_action')}</div><div className="text-sm text-neutral-300">{t('quick_action_desc')}</div></button>
+                  <button onClick={() => handleSend("List the core concepts mentioned in recently updated files.", t('dynamic_track'))} className="p-4 bg-[#1c1c1f] hover:bg-[#27272a] rounded-2xl border border-neutral-800 text-left transition-all hover:scale-[1.02]"><div className="text-xs font-bold text-indigo-400 mb-1">{t('dynamic_track')}</div><div className="text-sm text-neutral-300">{t('dynamic_track_desc')}</div></button>
                 </div>
               </div>
             ) : state.chatHistory.map((msg, i) => (
@@ -174,15 +175,15 @@ function App() {
     <div className="flex gap-2 px-1 pointer-events-auto overflow-x-auto scrollbar-hide">
                <button onClick={() => handleQuickAction('summary')} className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1c1c1f] border border-neutral-800 hover:border-blue-500/50 hover:bg-blue-600/5 text-xs text-neutral-400 hover:text-blue-400 transition-all shadow-xl">
                   <div className="w-5 h-5 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20"><Zap size={10} /></div>
-                  生成综述
+                  {t('action_summary')}
                </button>
                <button onClick={() => handleQuickAction('qa')} className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1c1c1f] border border-neutral-800 hover:border-indigo-500/50 hover:bg-indigo-600/5 text-xs text-neutral-400 hover:text-indigo-400 transition-all shadow-xl">
                   <div className="w-5 h-5 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20"><MessageSquare size={10} /></div>
-                  深度问答
+                  {t('action_qa')}
                </button>
                <button onClick={() => handleQuickAction('table')} className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1c1c1f] border border-neutral-800 hover:border-emerald-500/50 hover:bg-emerald-600/5 text-xs text-neutral-400 hover:text-emerald-400 transition-all shadow-xl">
                   <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20"><LayoutGrid size={10} /></div>
-                  提炼表格
+                  {t('action_table')}
                </button>
             </div>
 
@@ -195,9 +196,9 @@ function App() {
                   className="flex-1 bg-transparent border-none focus:ring-0 p-2 text-sm text-white placeholder-neutral-500 resize-none min-h-[44px] max-h-32 scrollbar-hide" 
                   rows={1} 
                   placeholder={
-                    state.status === 'GENERATING' ? '分析引擎运行中...' : 
-                    state.selectedSourceIds.size > 0 ? `当前处于【定向研读】模式 (仅在 ${state.selectedSourceIds.size} 个锁定素材中检索)...` : 
-                    '询问您的全库私有知识...'
+                    state.status === 'GENERATING' ? t('status_indexing') : 
+                    state.selectedSourceIds.size > 0 ? `${t('searching_locked')} (仅在 ${state.selectedSourceIds.size} 个锁定素材中检索)...` : 
+                    t('placeholder_empty')
                   } 
                   disabled={state.status === 'GENERATING'} 
                 />
@@ -212,13 +213,13 @@ function App() {
       {/* Right Sidebar: Evidence Vault */}
       <div className="w-[320px] min-w-[280px] shrink-0 bg-[#0c0c0e] border-l border-neutral-900 flex flex-col relative z-40">
          <div className="px-5 h-12 border-b border-neutral-900 flex items-center gap-2 text-neutral-400 text-xs font-bold tracking-widest uppercase pt-6">
-            <Zap size={12} className="text-blue-500"/> 溯源取证 (Sources)
+            <Zap size={12} className="text-blue-500"/> {t('evidence_vault')}
          </div>
          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
             {state.status === 'IDLE' && state.chatHistory.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-full text-center px-4 opacity-50">
                   <LayoutGrid size={24} className="text-neutral-600 mb-2" />
-                  <p className="text-[10px] text-neutral-500">发起搜索后，这里将显示引用来源</p>
+                  <p className="text-[10px] text-neutral-500">{t('no_sources_yet')}</p>
                </div>
             ) : (
                <ReferenceList 
@@ -231,7 +232,7 @@ function App() {
          </div>
       </div>
 
-      <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} lang={lang} setLang={setLang} />
+      <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
     </div>
   );
 }
