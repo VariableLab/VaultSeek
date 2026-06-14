@@ -1,6 +1,6 @@
 {
   "name": "vaultseek",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "本地私有化 AI 语义知识库 (Tauri + Rust 版)",
   "type": "module",
   "scripts": {
